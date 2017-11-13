@@ -15,6 +15,7 @@ import os
 import sys
 import argparse
 import nltk
+import pysolr
 from nltk.tokenize import sent_tokenize
 
 # For Testing Purposes.
