@@ -29,6 +29,8 @@ execDir = os.path.dirname(os.path.realpath(__file__))
 # Variable to hold training data location.  Can change via command-line parameter.
 trainingDataDir = os.path.join(execDir, "TrainingData")
 
+# Setup a Solr instance. The timeout is optional.
+solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
 
 def printDebugMsg(text):
     """Used for printing debug messages."""
@@ -69,7 +71,8 @@ def tokenizeIntoWords(sentence):
 
 
 def indexIntoSOLR(args):
-    """"""
+    """
+    """
     pass
 
 
@@ -89,34 +92,40 @@ def readTrainingData():
     for trainFile in os.listdir(trainingDataDir):
         currFile = open(os.path.join(trainingDataDir, trainFile), 'r')
         currFileData = currFile.read()
-        # Call the pipeline for each article.
-        nlpPipelineHelper(currFileData, indexQueryFlag="query")
 
         numFiles += 1
         numWords += len(tokenizeIntoWords(currFileData))
+
+        # Call the pipeline for each article.
+        nlpPipelineHelper(currFileData, indexQueryFlag="query", numFiles)
+
+
 
     printDebugMsg("Found {} Files in Training Data Directory.".format(numFiles))
     printDebugMsg("Found {} Words in Training Data.".format(numWords))
 
 
-def nlpPipelineHelper(Input, indexQueryFlag):
+def nlpPipelineHelper(Input, indexQueryFlag, doc_id):
     """Helper function for the NLP Pipeline.
     This is where the main part of the pipeline happens.
 
     INPUT:
-        -Input: either user input or article input.
-        -indexQueryFlag: Flag to determine if we need
-                to index into SOLR, or query from SOLR.
+        -Input:             either user input or article input.
+        -indexQueryFlag:    Flag to determine if we need
+                            to index into SOLR, or query from SOLR.
+        -doc_id:            Document id, or numFiles from `def readTrainingData()`
     """
     # Segment into sentences.
     sentences = segmentIntoSentences(Input)
+    sentence_id = 0
     for sentence in sentences:
+        sentence_id += 1
         # Tokenize sentences into words.
         words = tokenizeIntoWords(sentence)
 
         # Select whether to index words into SOLR or query from SOLR.
         if indexQueryFlag == "index":
-            indexIntoSOLR(words)
+            indexIntoSOLR(words, doc_id, sentence_id)
         elif indexQueryFlag == "query":
             queryFromSOLR(words)
         else:
