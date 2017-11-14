@@ -44,8 +44,31 @@ Example of running the program with user input AND also training based on the co
 <br /><br />
 
 <p>
-##Setup Solr
+## Setup Solr
 
 1. Install Solr -v 7.1.0.
-  * For mac:
-  ``` $ brew install solr```
+  * For mac: ``` $ brew install solr```
+  * For Windows: Go to Mirror link [Solr](http://apache.mirrors.pair.com/lucene/solr/7.1.0)
+    * Click on **solr-7.1.0.zip** link.
+
+2. Start Solr
+  * go to root folder of Solr.
+    * For mac: ``` $ solr start -p 8983```
+    * For Windows: ```bin\solr.cmd start```
+  * Check status of Solr.
+    * ```bin/solr status```, or
+    * Go to ```http://localhost:8983/solr/```
+
+3. Add Core
+  * For mac: ``` $ solr create -c mycore```
+  * For Windows: ```bin\solr.cmd create -c mycore```
+
+4. ```pip3 install pysolr```
+
+5. ```pip3 install codecs```
+
+6. To start indexing, run the following command:</br>
+<pre> $ python3 projectTask2.py --trainData </pre>
+
+7. To query:</br>
+<pre> $ python3 projectTask2.py --userInput "This is a test sentence. How do you do? This is a third sentence." </pre>
