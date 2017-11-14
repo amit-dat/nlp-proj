@@ -17,7 +17,6 @@ import sys
 import json
 import argparse
 import nltk
-#from mysolr import Solr
 import pysolr
 import codecs
 import requests
@@ -33,6 +32,9 @@ execDir = os.path.dirname(os.path.realpath(__file__))
 
 # Variable to hold training data location.  Can change via command-line parameter.
 trainingDataDir = os.path.join(execDir, "TrainingData")
+
+# Setup a Solr instance. The timeout is optional.
+solr = pysolr.Solr('http://localhost:8983/solr/mycore', timeout=10)
 
 
 
@@ -97,37 +99,19 @@ def createIndex(words, doc_id, sentence_id):
     solr_index["id"]="D{}S{}".format(doc_id,sentence_id)
     for word in words:
         word_num += 1
-        #if word_num != 78 :
         solr_index["W{}".format(word_num)] = word
-        #print(solr_index)
-
     return solr_index
 
 def indexIntoSOLR(documents_index_list):
-    """Adds list of indices of sentences from all docs to SOLR.
+    """Indexes the list of all the docs to SOLR,one
+    document at a time.
+
+    INPUT:
+        -documents_index_list:  List of indices of all the documents.
     """
-    # Setup a Solr instance. The timeout is optional.
-    solr = pysolr.Solr('http://localhost:8983/solr/mycore', timeout=10)
-    # session = requests.Session()
-    # solr = Solr('http://localhost:8983/solr/mycore1/')
+
     doc_count = 0
     for document in documents_index_list:
-        #try:
-        #print(document)
-
-        # solr.add([
-        #
-        # ])
-        #document = json.loads(str(document))
-        # with open('./jsonFiles/data{}.json'.format(doc_count), 'w') as outfile:
-        #     json.dump(document, outfile, indent=4)
-        #
-        # #document = json.dumps(document)
-        # with open('./jsonFiles/data{}.json'.format(doc_count)) as fp:
-        #     d = json.load(fp)
-        # print(type(d))
-        # print(d)
-
         print("done")
         try:
             solr.add([document])
@@ -135,15 +119,32 @@ def indexIntoSOLR(documents_index_list):
             print("can't index this document")
         doc_count+=1
         print(doc_count)
-    #print(documents_index_list)
-    #solr.search('I')
 
-def queryFromSOLR(args):
-    """"""
+
+def queryFromSOLR(words):
+    """Takes in words and match each word against the SOLR indices.
+
+    INPUT:
+        -words: List of tokenized sentences.
+    """
+    query_result_dict={}
+    word_count=0
+    for word in words:
+        word_count+=1
+        # Queries SOLR with input `W1:word`
+        results = solr.search("W{}:{}".format(word_count,word))
+
+        query_result_dict[word]=[]
+        for result in results:
+            query_result_dict[word].append(result['id'])
+            #print("The id is '{0}'.".format(result['id']))
+
+    # Prints dictionary of words as keys and values as a list of 'id's of all revelvant sentences.
+    print(query_result_dict)
     pass
 
 
-def readTrainingData():
+def readTrainingData(indexQueryFlag):
     """Read the Training Data.
     Training Data Directory is stored in the trainingDataDir variable.
 
@@ -158,6 +159,7 @@ def readTrainingData():
         # currFileData = currFile.read()
 
 
+        # Reads the file text as utf-8 coded text and ignores that can't be read.
         with codecs.open(os.path.join(trainingDataDir, trainFile), "r",encoding='utf-8', errors='ignore') as currFile:
             currFileData = currFile.read()
 
@@ -168,13 +170,12 @@ def readTrainingData():
         # Call the pipeline for each article.
 
         #nlpPipelineHelper(currFileData, indexQueryFlag="query", numFiles)
-        sentences_index_list = nlpPipelineHelper(currFileData, numFiles, indexQueryFlag="index")
+        sentences_index_list = nlpPipelineHelper(currFileData, indexQueryFlag, numFiles)
         #print(sentences_index_list)
 
         # append sentence indices of a document to the documents_index_list
         documents_index_list.extend(sentences_index_list)
 
-        #
 
         if numFiles%100==0:
             print(numFiles)
@@ -190,7 +191,7 @@ def readTrainingData():
     printDebugMsg("Found {} Words in Training Data.".format(numWords))
 
 
-def nlpPipelineHelper(Input, doc_id, indexQueryFlag):
+def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
     """Helper function for the NLP Pipeline.
     This is where the main part of the pipeline happens.
 
@@ -219,10 +220,6 @@ def nlpPipelineHelper(Input, doc_id, indexQueryFlag):
             # Create solr index for one sentence
             solrIndex = createIndex(words, doc_id, sentence_id)
 
-            #pysolr.Solr.add(solrIndex)
-
-            #print("index added")
-
             # Add solr index of that sentence to a list
             sentences_index_list.append(solrIndex)
 
@@ -243,7 +240,7 @@ def nlpPipeline(indexQueryFlag, userInput=None):
         -userInput: Sentence if user input; otherwise None.
     """
     if indexQueryFlag == "index":
-        readTrainingData()
+        readTrainingData(indexQueryFlag)
     elif indexQueryFlag == "query":
         # For testing.
         # userInput = "Hello World. How are you today? I am fine. Thank you."
