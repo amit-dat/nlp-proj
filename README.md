@@ -40,3 +40,12 @@ Example of running the program with user input AND also training based on the co
   <b>REQUIREMENTS:</b><br />
   The training data must be located in a folder called "TrainingData" located in the same folder as projectTask2.py.
 </p>
+
+<br /><br />
+
+<p>
+##Setup Solr
+
+1. Install Solr -v 7.1.0.
+  * For mac:
+  ``` $ brew install solr```
