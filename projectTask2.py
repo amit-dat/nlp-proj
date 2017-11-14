@@ -14,10 +14,13 @@
 import os
 import re
 import sys
+import json
 import argparse
 import nltk
+#from mysolr import Solr
 import pysolr
 import codecs
+import requests
 from nltk.tokenize import sent_tokenize
 
 # For Testing Purposes.
@@ -63,7 +66,7 @@ def tokenizeIntoWords(sentence):
     Output:
         -list of words.
     """
-    #sentence = re.sub(r'\W', ' ',sentence)
+    #                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             sentence = re.sub(r'\W', ' ',sentence)
     outputWords = nltk.word_tokenize(sentence)
 
     printDebugMsg("sentence is {}".format(sentence))
@@ -96,6 +99,7 @@ def createIndex(words, doc_id, sentence_id):
         word_num += 1
         #if word_num != 78 :
         solr_index["W{}".format(word_num)] = word
+        #print(solr_index)
 
     return solr_index
 
@@ -103,12 +107,36 @@ def indexIntoSOLR(documents_index_list):
     """Adds list of indices of sentences from all docs to SOLR.
     """
     # Setup a Solr instance. The timeout is optional.
-    #solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
-    solr = pysolr.Solr('http://localhost:8983/solr/mycore/',timeout=10)
-    try:
-        solr.add(documents_index_list)
-    except ValueError:
-        print("can't index")
+    solr = pysolr.Solr('http://localhost:8983/solr/mycore', timeout=10)
+    # session = requests.Session()
+    # solr = Solr('http://localhost:8983/solr/mycore1/')
+    doc_count = 0
+    for document in documents_index_list:
+        #try:
+        #print(document)
+
+        # solr.add([
+        #
+        # ])
+        #document = json.loads(str(document))
+        # with open('./jsonFiles/data{}.json'.format(doc_count), 'w') as outfile:
+        #     json.dump(document, outfile, indent=4)
+        #
+        # #document = json.dumps(document)
+        # with open('./jsonFiles/data{}.json'.format(doc_count)) as fp:
+        #     d = json.load(fp)
+        # print(type(d))
+        # print(d)
+
+        print("done")
+        try:
+            solr.add([document])
+        except Exception:
+            print("can't index this document")
+        doc_count+=1
+        print(doc_count)
+    #print(documents_index_list)
+    #solr.search('I')
 
 def queryFromSOLR(args):
     """"""
@@ -146,11 +174,14 @@ def readTrainingData():
         # append sentence indices of a document to the documents_index_list
         documents_index_list.extend(sentences_index_list)
 
+        #
+
         if numFiles%100==0:
             print(numFiles)
 
     print("Adding list to SOLR...")
 
+    #print(documents_index_list)
     indexIntoSOLR(documents_index_list)
 
 
@@ -187,6 +218,10 @@ def nlpPipelineHelper(Input, doc_id, indexQueryFlag):
 
             # Create solr index for one sentence
             solrIndex = createIndex(words, doc_id, sentence_id)
+
+            #pysolr.Solr.add(solrIndex)
+
+            #print("index added")
 
             # Add solr index of that sentence to a list
             sentences_index_list.append(solrIndex)
