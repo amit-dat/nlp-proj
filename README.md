@@ -43,8 +43,7 @@ Example of running the program with user input AND also training based on the co
 
 <br /><br />
 
-<p>
-## Setup Solr
+### Setup Solr
 
 1. Install Solr -v 7.1.0.
   * For mac: ``` $ brew install solr```
@@ -63,9 +62,9 @@ Example of running the program with user input AND also training based on the co
   * For mac: ``` $ solr create -c mycore```
   * For Windows: ```bin\solr.cmd create -c mycore```
 
-4. ```pip3 install pysolr```
+4. ```$ pip3 install pysolr```
 
-5. ```pip3 install codecs```
+5. ```$ pip3 install codecs```
 
 6. To start indexing, run the following command:</br>
 <pre> $ python3 projectTask2.py --trainData </pre>
