@@ -46,21 +46,21 @@ Example of running the program with user input AND also training based on the co
 ### Setup Solr
 
 1. Install Solr -v 7.1.0.
-  * For mac: ``` $ brew install solr```
-  * For Windows: Go to Mirror link [Solr](http://apache.mirrors.pair.com/lucene/solr/7.1.0)
-    * Click on **solr-7.1.0.zip** link.
+    * For mac: ``` $ brew install solr```
+    * For Windows: Go to Mirror link [Solr](http://apache.mirrors.pair.com/lucene/solr/7.1.0)
+      * Click on **solr-7.1.0.zip** link.
 
 2. Start Solr
-  * go to root folder of Solr.
-    * For mac: ``` $ solr start -p 8983```
-    * For Windows: ```bin\solr.cmd start```
-  * Check status of Solr.
-    * ```bin/solr status```, or
-    * Go to ```http://localhost:8983/solr/```
+    * go to root folder of Solr.
+      * For mac: ``` $ solr start -p 8983```
+      * For Windows: ```bin\solr.cmd start```
+    * Check status of Solr.
+      * ```bin/solr status```, or
+      * Go to ```http://localhost:8983/solr/```
 
 3. Add Core
-  * For mac: ``` $ solr create -c mycore```
-  * For Windows: ```bin\solr.cmd create -c mycore```
+    * For mac: ``` $ solr create -c mycore```
+    * For Windows: ```bin\solr.cmd create -c mycore```
 
 4. ```$ pip3 install pysolr```
 
