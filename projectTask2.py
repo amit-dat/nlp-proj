@@ -37,7 +37,6 @@ trainingDataDir = os.path.join(execDir, "TrainingData")
 solr = pysolr.Solr('http://localhost:8983/solr/mycore', timeout=10)
 
 
-
 def printDebugMsg(text):
     """Used for printing debug messages."""
     if DEBUG:
@@ -68,7 +67,7 @@ def tokenizeIntoWords(sentence):
     Output:
         -list of words.
     """
-    #                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             sentence = re.sub(r'\W', ' ',sentence)
+    # sentence = re.sub(r'\W', ' ',sentence)
     outputWords = nltk.word_tokenize(sentence)
 
     printDebugMsg("sentence is {}".format(sentence))
@@ -77,9 +76,7 @@ def tokenizeIntoWords(sentence):
     return outputWords
 
 
-
-
-def createIndex(words, doc_id, sentence_id):
+def createIndex(sentence, words, doc_id, sentence_id):
     """Takes in words, doc_id and sentence_id.
     Uses doc_id and sentence_id together constitute the key.
     Each word gets indexed with its doc_id and sentence_id.
@@ -94,13 +91,15 @@ def createIndex(words, doc_id, sentence_id):
 
     """
 
-    word_num = 0
+    # word_num = 0
     solr_index = {}
-    solr_index["id"]="D{}S{}".format(doc_id,sentence_id)
-    for word in words:
-        word_num += 1
-        solr_index["W{}".format(word_num)] = word
+    solr_index["id"] = "D{}_S{}".format(doc_id, sentence_id)
+    solr_index["sentence"] = sentence
+    # for word in words:
+    #     word_num += 1
+    #     solr_index["W{}".format(word_num)] = "{}".format(word)
     return solr_index
+
 
 def indexIntoSOLR(documents_index_list):
     """Indexes the list of all the docs to SOLR,one
@@ -117,7 +116,7 @@ def indexIntoSOLR(documents_index_list):
             solr.add([document])
         except Exception:
             print("can't index this document")
-        doc_count+=1
+        doc_count += 1
         print(doc_count)
 
 
@@ -127,20 +126,21 @@ def queryFromSOLR(words):
     INPUT:
         -words: List of tokenized sentences.
     """
-    query_result_dict={}
-    word_count=0
+    query_result_dict = {}
+    word_count = 0
     for word in words:
-        word_count+=1
+        word_count += 1
         # Queries SOLR with input `W1:word`
-        results = solr.search("W{}:{}".format(word_count,word))
+        results = solr.search("sentence:{}".format(word))
 
-        query_result_dict[word]=[]
+        query_result_dict[word] = []
         for result in results:
+            print("{}: {}".format(result['id'], result['sentence']))
             query_result_dict[word].append(result['id'])
-            #print("The id is '{0}'.".format(result['id']))
+            # print("The id is '{0}'.".format(result['id']))
 
     # Prints dictionary of words as keys and values as a list of 'id's of all revelvant sentences.
-    print(query_result_dict)
+    # print(query_result_dict)
     pass
 
 
@@ -155,37 +155,29 @@ def readTrainingData(indexQueryFlag):
     # Create a list containing index of every document in the directory.
     documents_index_list = []
     for trainFile in os.listdir(trainingDataDir):
-        # currFile = open(os.path.join(trainingDataDir, trainFile), 'r')
-        # currFileData = currFile.read()
-
-
         # Reads the file text as utf-8 coded text and ignores that can't be read.
-        with codecs.open(os.path.join(trainingDataDir, trainFile), "r",encoding='utf-8', errors='ignore') as currFile:
+        with codecs.open(os.path.join(trainingDataDir, trainFile), "r", encoding='utf-8', errors='ignore') as currFile:
             currFileData = currFile.read()
-
 
         numFiles += 1
         numWords += len(tokenizeIntoWords(currFileData))
 
         # Call the pipeline for each article.
 
-        #nlpPipelineHelper(currFileData, indexQueryFlag="query", numFiles)
+        # nlpPipelineHelper(currFileData, indexQueryFlag="query", numFiles)
         sentences_index_list = nlpPipelineHelper(currFileData, indexQueryFlag, numFiles)
-        #print(sentences_index_list)
+        # print(sentences_index_list)
 
         # append sentence indices of a document to the documents_index_list
         documents_index_list.extend(sentences_index_list)
 
-
-        if numFiles%100==0:
+        if numFiles % 100 == 0:
             print(numFiles)
 
     print("Adding list to SOLR...")
 
-    #print(documents_index_list)
+    # print(documents_index_list)
     indexIntoSOLR(documents_index_list)
-
-
 
     printDebugMsg("Found {} Files in Training Data Directory.".format(numFiles))
     printDebugMsg("Found {} Words in Training Data.".format(numWords))
@@ -218,7 +210,7 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
         if indexQueryFlag == "index":
 
             # Create solr index for one sentence
-            solrIndex = createIndex(words, doc_id, sentence_id)
+            solrIndex = createIndex(sentence, words, doc_id, sentence_id)
 
             # Add solr index of that sentence to a list
             sentences_index_list.append(solrIndex)
@@ -230,6 +222,7 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
             sys.exit(1)
 
     return sentences_index_list
+
 
 def nlpPipeline(indexQueryFlag, userInput=None):
     """NLP Pipeline.
