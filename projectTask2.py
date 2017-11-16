@@ -91,10 +91,11 @@ def createIndex(sentence, words, doc_id, sentence_id):
 
     """
 
-    # word_num = 0
     solr_index = {}
     solr_index["id"] = "D{}_S{}".format(doc_id, sentence_id)
     solr_index["sentence"] = sentence
+
+    # word_num = 0
     # for word in words:
     #     word_num += 1
     #     solr_index["W{}".format(word_num)] = "{}".format(word)
@@ -126,22 +127,31 @@ def queryFromSOLR(words):
     INPUT:
         -words: List of tokenized sentences.
     """
-    query_result_dict = {}
-    word_count = 0
-    for word in words:
-        word_count += 1
-        # Queries SOLR with input `W1:word`
-        results = solr.search("sentence:{}".format(word))
+    resultCounter = 1
 
-        query_result_dict[word] = []
-        for result in results:
-            print("{}: {}".format(result['id'], result['sentence']))
-            query_result_dict[word].append(result['id'])
-            # print("The id is '{0}'.".format(result['id']))
+    # If you search with all words separated by space surrounded by ( ),
+    # then SOLR will look for those words in the sentence in any order.
+    results = solr.search("sentence:({})".format(" ".join(words)))
+    for result in results:
+        print("{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence']))
+        resultCounter += 1
 
-    # Prints dictionary of words as keys and values as a list of 'id's of all revelvant sentences.
-    # print(query_result_dict)
-    pass
+    # query_result_dict={}
+    #
+    # word_count=0
+    # for word in words:
+    #     word_count += 1
+    #     # Queries SOLR with input `W1:word`
+    #     results=solr.search("sentence:{}".format(word))
+    #
+    #     query_result_dict[word]=[]
+    #     for result in results:
+    #         print("{}: {}".format(result['id'], result['sentence']))
+    #         query_result_dict[word].append(result['id'])
+    #         # print("The id is '{0}'.".format(result['id']))
+    #
+    # # Prints dictionary of words as keys and values as a list of 'id's of all revelvant sentences.
+    # # print(query_result_dict)
 
 
 def readTrainingData(indexQueryFlag):
