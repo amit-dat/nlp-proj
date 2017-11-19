@@ -12,14 +12,11 @@
 # Teamname:
 #       GASBDV (General Anakin Skywalker Becomes Darth Vader)
 import os
-import re
 import sys
-import json
 import argparse
 import nltk
 import pysolr
 import codecs
-import requests
 from nltk.tokenize import sent_tokenize
 
 # For Testing Purposes.
@@ -34,7 +31,7 @@ execDir = os.path.dirname(os.path.realpath(__file__))
 trainingDataDir = os.path.join(execDir, "TrainingData")
 
 # Setup a Solr instance. The timeout is optional.
-solr = pysolr.Solr('http://localhost:8983/solr/mycore', timeout=10)
+solr = pysolr.Solr('http://localhost:8983/solr/part2core', timeout=10)
 
 
 def printDebugMsg(text):
@@ -94,11 +91,6 @@ def createIndex(sentence, words, doc_id, sentence_id):
     solr_index = {}
     solr_index["id"] = "D{}_S{}".format(doc_id, sentence_id)
     solr_index["sentence"] = sentence
-
-    # word_num = 0
-    # for word in words:
-    #     word_num += 1
-    #     solr_index["W{}".format(word_num)] = "{}".format(word)
     return solr_index
 
 
@@ -135,23 +127,6 @@ def queryFromSOLR(words):
     for result in results:
         print("{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence']))
         resultCounter += 1
-
-    # query_result_dict={}
-    #
-    # word_count=0
-    # for word in words:
-    #     word_count += 1
-    #     # Queries SOLR with input `W1:word`
-    #     results=solr.search("sentence:{}".format(word))
-    #
-    #     query_result_dict[word]=[]
-    #     for result in results:
-    #         print("{}: {}".format(result['id'], result['sentence']))
-    #         query_result_dict[word].append(result['id'])
-    #         # print("The id is '{0}'.".format(result['id']))
-    #
-    # # Prints dictionary of words as keys and values as a list of 'id's of all revelvant sentences.
-    # # print(query_result_dict)
 
 
 def readTrainingData(indexQueryFlag):
