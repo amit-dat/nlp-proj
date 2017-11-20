@@ -191,7 +191,6 @@ def getHeadWord(sentence):
         time.sleep(5)
         getHeadWord(sentence)
 
-    headWord = "test"
     return headWord
 
 
