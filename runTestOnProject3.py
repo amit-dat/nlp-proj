@@ -129,13 +129,20 @@ if __name__ == "__main__":
 
                 printDebugMsg(remainingCommandToRun)
 
-                commandToRunList = ['python', 'projectTask3.py', '--userInput', '"G-7 strengthens Paris Accord"', '--testing', '--sentenceFlag', '--sentenceWeight', '1', '--lemmaFlag', '--lemmaWeight', '1', '--stemFlag', '--stemWeight', '1', '--posTagFlag',
-                                    '--posTagWeight', '1', '--headWordFlag', '--headWordWeight', '1', '--hypernymFlag', '--hypernymWeight', '1', '--hyponymFlag', '--hyponymWeight', '1', '--meronymFlag', '--meronymWeight', '1', '--holonymFlag', '--holonymWeight', '1']
+                # commandToRunList = ['python', 'projectTask3.py', '--userInput', '"G-7 strengthens Paris Accord"', '--testing', '--sentenceFlag', '--sentenceWeight', '1', '--lemmaFlag', '--lemmaWeight', '1', '--stemFlag', '--stemWeight', '1', '--posTagFlag',
+                #                     '--posTagWeight', '1', '--headWordFlag', '--headWordWeight', '1', '--hypernymFlag', '--hypernymWeight', '1', '--hyponymFlag', '--hyponymWeight', '1', '--meronymFlag', '--meronymWeight', '1', '--holonymFlag', '--holonymWeight', '1']
 
-                # # Subprocess requires list of commands, where each value is an item in the list.
-                # remainingCommandToRunList = remainingCommandToRun.split(" ")
-                # commandToRunList.extend(remainingCommandToRunList)
-                # printDebugMsg("commandToRunList is: {}".format(commandToRunList))
+                # Subprocess requires list of commands, where each value is an item in the list.
+                remainingCommandToRunList = remainingCommandToRun.split(" ")
+
+                # May have extra space at the end, so remove it if it does.
+                if remainingCommandToRunList[-1:] == [""]:
+                    lengthOfList = len(remainingCommandToRunList) - 1
+                    remainingCommandToRunList = remainingCommandToRunList[:lengthOfList]
+
+                # Extend initial list with parameters from list we just populated.
+                commandToRunList.extend(remainingCommandToRunList)
+                printDebugMsg("commandToRunList is: {}".format(commandToRunList))
                 scriptOutput = bytes.decode(subprocess.check_output(commandToRunList))
                 printDebugMsg("scriptOutput is {}".format(scriptOutput))
 
