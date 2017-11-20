@@ -17,10 +17,14 @@ import argparse
 import nltk
 import pysolr
 import codecs
+import time
+import datetime
 from nltk.tokenize import sent_tokenize
 from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
+from stanfordcorenlp import StanfordCoreNLP
+
 
 # For Testing Purposes.
 ### DO NOT MAKE CHANGES TO TESTING VARIABLE HERE ###
@@ -36,27 +40,31 @@ trainingDataDir = os.path.join(execDir, "TrainingData")
 # Setup a Solr instance. The timeout is optional.
 solr = pysolr.Solr('http://localhost:8983/solr/part3core', timeout=10)
 
+# Setup a StanfordCoreNLP instance to get the head word.
+nlp = StanfordCoreNLP('http://corenlp.run', port=80)
 
 # Flags for query variables and their scores.
 # Higher scores put more weight on those search terms.
 # Default all to 1 for now.
 # Can use these flags to automate testing later.
 SENTENCE_FLAG = True
-SENTENCE_SCORE = 1
+SENTENCE_WEIGHT = 1
 LEMMA_FLAG = True
-LEMMA_SCORE = 1
+LEMMA_WEIGHT = 1
 STEM_FLAG = True
-STEM_SCORE = 1
+STEM_WEIGHT = 1
 POSTAG_FLAG = True
-POSTAG_SCORE = 1
+POSTAG_WEIGHT = 1
+HEADWORD_FLAG = True
+HEADWORD_WEIGHT = 1
 HYPERNYM_FLAG = True
-HYPERNYM_SCORE = 1
+HYPERNYM_WEIGHT = 1
 HYPONYM_FLAG = True
-HYPONYM_SCORE = 1
+HYPONYM_WEIGHT = 1
 MERONYM_FLAG = True
-MERONYM_SCORE = 1
+MERONYM_WEIGHT = 1
 HOLONYM_FLAG = True
-HOLONYM_SCORE = 1
+HOLONYM_WEIGHT = 1
 
 
 def printDebugMsg(text):
@@ -160,7 +168,7 @@ def syntacticParseAndExtractPhrases(sentence):
     pass
 
 
-def headWords(words):
+def getHeadWord(sentence):
     """NOTE: Only have to do one of the following:
             1) Syntactic Parse And Extract Phrases.
             2) Head Words.
@@ -168,10 +176,26 @@ def headWords(words):
 
     This function extracts the head word from the sentence.
     """
-    pass
+
+    try:
+        annotated_text = nlp.dependency_parse(sentence)
+        index = annotated_text[0][2]
+        headWord = nlp.word_tokenize(sentence)[index - 1]
+        # print("headWord is {}".format(headWord))
+
+        printDebugMsg("headWord is {}".format(headWord))
+    except:
+        # Sleep for 5 seconds and retry getHeadWord
+        print("Bug encountered for StanfordCoreNLP. Running out of ports for requests to communicate with the CoreNLP Server.")
+        print("Attempting fix of sleeping for a few seconds, and then trying again...\n\n")
+        time.sleep(5)
+        getHeadWord(sentence)
+
+    headWord = "test"
+    return headWord
 
 
-def dependencyParseRelationsAsFeatures(words):
+def dependencyParseRelationsAsFeatures(sentence):
     """NOTE: Only have to do one of the following:
             1) Syntactic Parse And Extract Phrases.
             2) Head Words.
@@ -281,7 +305,7 @@ def getHolonyms(words):
     return listOfHolonyms
 
 
-def createIndex(sentence, words, lemmas, stems, posTags, hypernyms, hyponyms, meronyms, holonyms, doc_id, sentence_id):
+def createIndex(sentence, words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, meronyms, holonyms, doc_id, sentence_id):
     """Takes in words, doc_id and sentence_id.
     Uses doc_id and sentence_id together constitute the key.
     Each word gets indexed with its doc_id and sentence_id.
@@ -291,6 +315,7 @@ def createIndex(sentence, words, lemmas, stems, posTags, hypernyms, hyponyms, me
         -lemmas.
         -stemmed words.
         -POS-tagged words.
+        -head words.
         -Hypernyms.
         -Hyponyms.
         -Meronyms.
@@ -309,6 +334,7 @@ def createIndex(sentence, words, lemmas, stems, posTags, hypernyms, hyponyms, me
     solr_index["lemmas"] = lemmas
     solr_index["stems"] = stems
     solr_index["posTags"] = posTags
+    solr_index["headWord"] = headWord
     solr_index["hypernyms"] = hypernyms
     solr_index["hyponyms"] = hyponyms
     solr_index["meronyms"] = meronyms
@@ -333,10 +359,10 @@ def indexIntoSOLR(documents_index_list):
         except Exception:
             print("can't index this document")
         doc_count += 1
-        print(doc_count)
+        print("Indexing document number {}".format(doc_count))
 
 
-def queryFromSOLR(words, lemmas, stems, posTags, hypernyms, hyponyms, meronyms, holonyms):
+def queryFromSOLR(words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, meronyms, holonyms):
     """Takes in words and match each word against the SOLR indices.
 
     INPUT:
@@ -344,6 +370,7 @@ def queryFromSOLR(words, lemmas, stems, posTags, hypernyms, hyponyms, meronyms, 
         -lemmas.
         -stemmed words.
         -POS-tagged words.
+        -head words.
         -Hypernyms.
         -Hyponyms.
         -Meronyms.
@@ -358,33 +385,36 @@ def queryFromSOLR(words, lemmas, stems, posTags, hypernyms, hyponyms, meronyms, 
     searchQuery = ""
 
     if SENTENCE_FLAG:
-        searchQuery += "sentence:({})^{} ".format(" ".join(words), SENTENCE_SCORE)
+        searchQuery += "sentence:({})^{} ".format(" ".join(words), SENTENCE_WEIGHT)
 
     if LEMMA_FLAG:
-        searchQuery += "lemmas:({})^{} ".format(" ".join(lemmas), LEMMA_SCORE)
+        searchQuery += "lemmas:({})^{} ".format(" ".join(lemmas), LEMMA_WEIGHT)
 
     if STEM_FLAG:
-        searchQuery += "stems:({})^{} ".format(" ".join(stems), STEM_SCORE)
+        searchQuery += "stems:({})^{} ".format(" ".join(stems), STEM_WEIGHT)
 
     if POSTAG_FLAG:
         posTagList = [str(x) for x in posTags]
-        searchQuery += "posTags:({})^{} ".format(" ".join(posTagList), POSTAG_SCORE)
+        searchQuery += "posTags:({})^{} ".format(" ".join(posTagList), POSTAG_WEIGHT)
+
+    if HEADWORD_FLAG:
+        searchQuery += "headWord:({})^{} ".format(headWord, HEADWORD_WEIGHT)
 
     if HYPERNYM_FLAG:
         hypernymList = [str(x) for x in hypernyms]
-        searchQuery += "hypernyms:({})^{} ".format(" ".join(hypernymList), HYPERNYM_SCORE)
+        searchQuery += "hypernyms:({})^{} ".format(" ".join(hypernymList), HYPERNYM_WEIGHT)
 
     if HYPONYM_FLAG:
         hyponymList = [str(x) for x in hyponyms]
-        searchQuery += "hyponyms:({})^{} ".format(" ".join(hyponymList), HYPONYM_SCORE)
+        searchQuery += "hyponyms:({})^{} ".format(" ".join(hyponymList), HYPONYM_WEIGHT)
 
     if MERONYM_FLAG:
         meronymList = [str(x) for x in meronyms]
-        searchQuery += "meronyms:({})^{} ".format(" ".join(meronymList), MERONYM_SCORE)
+        searchQuery += "meronyms:({})^{} ".format(" ".join(meronymList), MERONYM_WEIGHT)
 
     if HOLONYM_FLAG:
         holonymList = [str(x) for x in holonyms]
-        searchQuery += "holonyms:({})^{} ".format(" ".join(holonymList), HOLONYM_SCORE)
+        searchQuery += "holonyms:({})^{} ".format(" ".join(holonymList), HOLONYM_WEIGHT)
 
     # Verify that at least one thing is being queried.
     if len(searchQuery) == 0:
@@ -432,7 +462,8 @@ def readTrainingData(indexQueryFlag):
         documents_index_list.extend(sentences_index_list)
 
         if numFiles % 100 == 0:
-            print(numFiles)
+            print("Finished parsing {} files at time {}".format(
+                numFiles, datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S")))
 
     print("Adding list to SOLR...")
 
@@ -468,7 +499,7 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
         lemmas = lemmatizeWords(words)
         stems = stemWords(words)
         posTags = posTagWords(words)
-        # TODO: Add in one of the OR functions (head word, etc.).
+        headWord = getHeadWord(sentence)
         hypernyms = getHypernyms(words)
         hyponyms = getHyponyms(words)
         meronyms = getMeronyms(words)
@@ -478,14 +509,15 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
         if indexQueryFlag == "index":
 
             # Create solr index for one sentence
-            solrIndex = createIndex(sentence, words, lemmas, stems, posTags,
+            solrIndex = createIndex(sentence, words, lemmas, stems, posTags, headWord,
                                     hypernyms, hyponyms, meronyms, holonyms, doc_id, sentence_id)
 
             # Add solr index of that sentence to a list
             sentences_index_list.append(solrIndex)
 
         elif indexQueryFlag == "query":
-            queryFromSOLR(words, lemmas, stems, posTags, hypernyms, hyponyms, meronyms, holonyms)
+            queryFromSOLR(words, lemmas, stems, posTags, headWord,
+                          hypernyms, hyponyms, meronyms, holonyms)
         else:
             print("INVALID indexQueryFlag")
             sys.exit(1)
@@ -512,7 +544,7 @@ def nlpPipeline(indexQueryFlag, userInput=None):
 def runAlgorithm(args):
     """Main function that runs the Algorithm"""
     # Parse arguments
-    parser = argparse.ArgumentParser(description='Task 2: Create a Shallow NLP Pipeline.')
+    parser = argparse.ArgumentParser(description='Task 3: Create a Deep NLP Pipeline.')
     parser.add_argument('--debug', required=False, action="store_true",
                         help="Enable to print Debug Messages.")
     parser.add_argument('--trainData', required=False,
@@ -520,6 +552,44 @@ def runAlgorithm(args):
     parser.add_argument('--dataLocation', required=False,
                         help="Training Data location if not default.")
     parser.add_argument('--userInput', required=False, help="Sentence to test on.")
+    parser.add_argument('--testing', required=False, action="store_true",
+                        help="MUST Be Enabled in order to Test Parameters (Lemma, Stem, Hypernym, etc.).")
+    parser.add_argument('--sentenceFlag', required=False, action="store_true",
+                        help="Set to enable querying for sentences.")
+    parser.add_argument('--sentenceWeight', required=False,
+                        help="Set to change the default weight of sentences from 1.")
+    parser.add_argument('--lemmaFlag', required=False, action="store_true",
+                        help="Set to enable querying for lemmas.")
+    parser.add_argument('--lemmaWeight', required=False,
+                        help="Set to change the default weight of lemmas from 1.")
+    parser.add_argument('--stemFlag', required=False, action="store_true",
+                        help="Set to enable querying for stems.")
+    parser.add_argument('--stemWeight', required=False,
+                        help="Set to change the default weight of stems from 1.")
+    parser.add_argument('--posTagFlag', required=False, action="store_true",
+                        help="Set to enable querying for POS Tags.")
+    parser.add_argument('--posTagWeight', required=False,
+                        help="Set to change the default weight of POS Tags from 1.")
+    parser.add_argument('--headWordFlag', required=False, action="store_true",
+                        help="Set to enable querying for Head Words.")
+    parser.add_argument('--headWordWeight', required=False,
+                        help="Set to change the default weight of Head Words from 1.")
+    parser.add_argument('--hypernymFlag', required=False, action="store_true",
+                        help="Set to enable querying for hypernyms.")
+    parser.add_argument('--hypernymWeight', required=False,
+                        help="Set to change the default weight of hypernyms from 1.")
+    parser.add_argument('--hyponymFlag', required=False, action="store_true",
+                        help="Set to enable querying for hyponyms.")
+    parser.add_argument('--hyponymWeight', required=False,
+                        help="Set to change the default weight of hyponyms from 1.")
+    parser.add_argument('--meronymFlag', required=False, action="store_true",
+                        help="Set to enable querying for meronyms.")
+    parser.add_argument('--meronymWeight', required=False,
+                        help="Set to change the default weight of meronyms from 1.")
+    parser.add_argument('--holonymFlag', required=False, action="store_true",
+                        help="Set to enable querying for holonyms.")
+    parser.add_argument('--holonymWeight', required=False,
+                        help="Set to change the default weight of holonyms from 1.")
     args = parser.parse_args()
 
     if (not args.trainData) and (not args.userInput):
@@ -542,6 +612,113 @@ def runAlgorithm(args):
         elif not os.path.isdir(trainingDataDir):
             print("ERROR: {} is not a directory. Exiting...".format(trainingDataDir))
             sys.exit(1)
+
+    # Check if we are testing variables; else use defaults.
+    # Values must be explicitly set if testing.
+    if (args.testing) and (args.userInput):
+        global SENTENCE_FLAG
+        global LEMMA_FLAG
+        global STEM_FLAG
+        global POSTAG_FLAG
+        global HEADWORD_FLAG
+        global HYPERNYM_FLAG
+        global HYPONYM_FLAG
+        global MERONYM_FLAG
+        global HOLONYM_FLAG
+
+        # Sentence parameters
+        if args.sentenceFlag:
+            SENTENCE_FLAG = True
+
+            if args.sentenceWeight:
+                global SENTENCE_WEIGHT
+                SENTENCE_WEIGHT = args.sentenceWeight
+        else:
+            SENTENCE_FLAG = False
+
+        # Lemma parameters
+        if args.lemmaFlag:
+            LEMMA_FLAG = True
+
+            if args.lemmaWeight:
+                global LEMMA_WEIGHT
+                LEMMA_WEIGHT = args.lemmaWeight
+        else:
+            LEMMA_FLAG = False
+
+        # Stem parameters
+        if args.stemFlag:
+            STEM_FLAG = True
+
+            if args.stemWeight:
+                global STEM_WEIGHT
+                STEM_WEIGHT = args.stemWeight
+        else:
+            STEM_FLAG = False
+
+        # posTag parameters
+        if args.posTagFlag:
+            POSTAG_FLAG = True
+
+            if args.posTagWeight:
+                global POSTAG_WEIGHT
+                POSTAG_WEIGHT = args.posTagWeight
+        else:
+            POSTAG_FLAG = False
+
+        # HeadWord parameters
+        if args.headWordFlag:
+            HEADWORD_FLAG = True
+
+            if args.headWordWeight:
+                global HEADWORD_WEIGHT
+                HEADWORD_WEIGHT = args.headWordWeight
+        else:
+            HEADWORD_FLAG = False
+
+        # Hypernym parameters
+        if args.hypernymFlag:
+            HYPERNYM_FLAG = True
+
+            if args.hypernymWeight:
+                global HYPERNYM_WEIGHT
+                HYPERNYM_WEIGHT = args.hypernymWeight
+        else:
+            HYPERNYM_FLAG = False
+
+        # Hyponym parameters
+        if args.hyponymFlag:
+            HYPONYM_FLAG = True
+
+            if args.hyponymWeight:
+                global HYPONYM_WEIGHT
+                HYPONYM_WEIGHT = args.hyponymWeight
+        else:
+            HYPONYM_FLAG = False
+
+        # Meronym parameters
+        if args.meronymFlag:
+            MERONYM_FLAG = True
+
+            if args.meronymWeight:
+                global MERONYM_WEIGHT
+                MERONYM_WEIGHT = args.meronymWeight
+        else:
+            MERONYM_FLAG = False
+
+        # Holonym parameters
+        if args.holonymFlag:
+            HOLONYM_FLAG = True
+
+            if args.holonymWeight:
+                global HOLONYM_WEIGHT
+                HOLONYM_WEIGHT = args.holonymWeight
+        else:
+            HOLONYM_FLAG = False
+
+    elif args.testing:
+        print("ERROR: If --testing flag is set then you must also have --userInput flag.  Exiting...")
+        sys.exit(1)
 
     # Finished parsing command-line options.
     printDebugMsg("Finished with argument parsing.")
