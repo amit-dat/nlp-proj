@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 # remainingCommandToRunList = remainingCommandToRun.split(" ")
                 # commandToRunList.extend(remainingCommandToRunList)
                 # printDebugMsg("commandToRunList is: {}".format(commandToRunList))
-                scriptOutput = subprocess.check_output(commandToRunList)
+                scriptOutput = bytes.decode(subprocess.check_output(commandToRunList))
                 printDebugMsg("scriptOutput is {}".format(scriptOutput))
 
                 with open(outputFilePath, 'a') as outputFile:

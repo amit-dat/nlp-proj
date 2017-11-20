@@ -184,6 +184,7 @@ def getHeadWord(sentence):
         # print("headWord is {}".format(headWord))
 
         printDebugMsg("headWord is {}".format(headWord))
+        return headWord
     except:
         # Sleep for 5 seconds and retry getHeadWord
         print("Bug encountered for StanfordCoreNLP. Running out of ports for requests to communicate with the CoreNLP Server.")
@@ -191,7 +192,8 @@ def getHeadWord(sentence):
         time.sleep(5)
         getHeadWord(sentence)
 
-    return headWord
+    # Return blank if no headword found.
+    return ""
 
 
 def dependencyParseRelationsAsFeatures(sentence):
