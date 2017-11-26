@@ -43,6 +43,26 @@ Example of running the program with user input AND also training based on the co
 
 <br /><br />
 
+
+### Part 3 Code
+Run the same as part 2 code above.
+
+To train based on the corpus:<br />
+<pre>python projectTask3.py --trainData</pre>
+
+To query user input:<br />
+<pre>python projectTask3.py --userInput "who has support for Paris Accord"</pre>
+
+
+### Automating the testing of Part 3 Code
+You can specify the flag and the weight.  If the flag is NOT specified, that feature is not used in the query.
+To do this testing you MUST include the "--testing" flag.
+
+Here is an example of querying with all the features with weight 1 (NOTE: This is default behavior):<br />
+<pre>python projectTask3.py --userInput "G-7 strengthens Paris Accord" --testing --sentenceFlag --sentenceWeight 1 --lemmaFlag --lemmaWeight 1 --stemFlag --stemWeight 1 --posTagFlag --posTagWeight 1 --headWordFlag --headWordWeight 1 --hypernymFlag --hypernymWeight 1 --hyponymFlag --hyponymWeight 1 --meronymFlag --meronymWeight 1 --holonymFlag --holonymWeight 1</pre>
+
+
+
 ### Setup Solr
 
 1. Install Solr -v 7.1.0.
