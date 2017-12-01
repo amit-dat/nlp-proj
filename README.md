@@ -91,3 +91,22 @@ Here is an example of querying with all the features with weight 1 (NOTE: This i
 
 7. To query:</br>
 <pre> $ python3 projectTask2.py --userInput "This is a test sentence. How do you do? This is a third sentence." </pre>
+
+
+
+
+
+### Using runTestOnProject3.py
+To run:
+<pre>python runTaskOnProject3.py --file FILENAME</pre>
+FILENAME can be whatever input file you have that is in the format of AutomatedTestInput.txt
+
+The script will output 3 files.  PID and TIMESTAMP are variables and may change between different runs:
+1) Project3Test_PID_TIMESTAMP.txt
+    a) This one will be used later in determining which variables have higher MRR.
+    b) NOT NEEDED RIGHT NOW.
+2) OutputSentencesToGradeTask3_PID_TIMESTAMP.txt
+    a) <b>This is the file you need to grade the sentences from.</b>
+3) OutputRunAfterGradingSentences_PID_TIMESTAMP.txt
+    a) This one will be used later in determining which variables have higher MRR.
+    b) NOT NEEDED RIGHT NOW.
