@@ -67,6 +67,10 @@ HOLONYM_FLAG = True
 HOLONYM_WEIGHT = 1
 
 
+# Query Flag used if we are only querying to display info for demo.
+QUERY_FLAG = False
+
+
 def printDebugMsg(text):
     """Used for printing debug messages."""
     if DEBUG:
@@ -187,6 +191,7 @@ def getHeadWord(sentence):
         return headWord
     except:
         # Sleep for 5 seconds and retry getHeadWord
+        # https://github.com/stanfordnlp/stanza/issues/16
         print("Bug encountered for StanfordCoreNLP. Running out of ports for requests to communicate with the CoreNLP Server.")
         print("Attempting fix of sleeping for a few seconds, and then trying again...\n\n")
         time.sleep(5)
@@ -424,6 +429,10 @@ def queryFromSOLR(words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, 
 
     printDebugMsg("searchQuery is {}".format(searchQuery))
 
+    # Print output for Demo.
+    if QUERY_FLAG:
+        print("SOLR Search Query is:\n{}\n".format(searchQuery))
+
     # Search.
     results = solr.search(searchQuery)
 
@@ -505,6 +514,19 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
         hyponyms = getHyponyms(words)
         meronyms = getMeronyms(words)
         holonyms = getHolonyms(words)
+
+        # Print output for Demo.
+        if QUERY_FLAG:
+            print("Sentence is {}".format(sentence))
+            print("Words are {}".format(words))
+            print("Lemmas are {}".format(lemmas))
+            print("Stems are {}".format(stems))
+            print("POS Tags are {}".format(posTags))
+            print("Head word is {}".format(headWord))
+            print("Hypernyms are {}".format(hypernyms))
+            print("Hyponyms are {}".format(hyponyms))
+            print("Meronyms are {}".format(meronyms))
+            print("Holonyms are {}".format(holonyms))
 
         # Select whether to index words into SOLR or query from SOLR.
         if indexQueryFlag == "index":
@@ -730,6 +752,8 @@ def runAlgorithm(args):
 
     # User input means we need to query from SOLR.
     if args.userInput:
+        global QUERY_FLAG
+        QUERY_FLAG = True
         nlpPipeline("query", userInput=args.userInput)
 
 

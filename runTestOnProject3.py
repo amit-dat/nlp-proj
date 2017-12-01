@@ -27,9 +27,18 @@ execDir = os.path.dirname(os.path.realpath(__file__))
 
 # Generate filename based on PID of process and datetime.
 # Include PID in case we want to run multiple instances concurrently, then each PID has a separate output file.
-outputFileName = "Project3Test_{}_{}.txt".format(
-    os.getpid(), datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S"))
+currPid = os.getpid()
+currTime = datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
+outputFileName = "Project3Test_{}_{}.txt".format(currPid, currTime)
 outputFilePath = os.path.join(execDir, outputFileName)
+outputRunAfterGradingSentencesName = "OutputRunAfterGradingSentences_{}_{}.txt".format(
+    currPid, currTime)
+outputRunAfterGradingSentencesPath = os.path.join(execDir, outputRunAfterGradingSentencesName)
+outputSentencesToGradeName = "OutputSentencesToGradeTask3_{}_{}.txt".format(currPid, currTime)
+outputSentencesToGradeFilePath = os.path.join(execDir, outputSentencesToGradeName)
+
+# Dictionary to hold each unique sentence found based on DocSentenceID
+UniqueSentences = {}
 
 
 def printDebugMsg(text):
@@ -146,6 +155,26 @@ if __name__ == "__main__":
                 scriptOutput = bytes.decode(subprocess.check_output(commandToRunList))
                 printDebugMsg("scriptOutput is {}".format(scriptOutput))
 
+                # Parse scriptOutput
+                for line in scriptOutput.split("\n"):
+                    # Skip blank lines in output.
+                    if len(line) < 3:
+                        continue
+
+                    # QUERY_FLAG in projectTask3 will output extra info. Ignore it.
+                    try:
+                        lineNumber, docID, sentence = line.split("\t")
+                    except ValueError:
+                        continue
+
+                    sentence = sentence.strip("\r\n")
+                    UniqueSentences[docID] = sentence
+
+                    with open(outputRunAfterGradingSentencesPath, 'a') as outputAfterGradingFile:
+                        outputAfterGradingFile.write(
+                            "{}\t{}\t{}\t{}\n".format(testNumber, lineNumber, docID, sentence))
+
+                # Run original file output
                 with open(outputFilePath, 'a') as outputFile:
                     # Write input parameters for test.
                     outputFile.write("{}\n\n".format("\n".join(listOfVariableValues)))
@@ -259,3 +288,8 @@ if __name__ == "__main__":
             elif len(line) == 0:
                 # Blank line
                 continue
+
+    # Run variables to grade output
+    with open(outputSentencesToGradeFilePath, 'a') as outputGradeFile:
+        for key, val in UniqueSentences.items():
+            outputGradeFile.write("{}\t{}\n".format(key, val))

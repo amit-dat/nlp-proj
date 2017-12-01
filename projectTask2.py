@@ -24,6 +24,9 @@ from nltk.tokenize import sent_tokenize
 ### ONLY MAKE CHANGES FROM COMMAND-LINE OPTIONS ###
 DEBUG = False  # True/False.
 
+# Query Flag used if we are only querying to display info for demo.
+QUERY_FLAG = False
+
 # Get directory of executable files are located in relative to python file.
 execDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -121,6 +124,10 @@ def queryFromSOLR(words):
     """
     resultCounter = 1
 
+    # Output for Demo.
+    if QUERY_FLAG:
+        print("SOLR Search Query is:\n{}\n".format("sentence:({})".format(" ".join(words))))
+
     # If you search with all words separated by space surrounded by ( ),
     # then SOLR will look for those words in the sentence in any order.
     results = solr.search("sentence:({})".format(" ".join(words)))
@@ -183,6 +190,11 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
     """
     # Segment into sentences.
     sentences = segmentIntoSentences(Input)
+
+    # Print output for Demo.
+    if QUERY_FLAG:
+        print("Sentence is {}".format(sentences))
+
     sentence_id = 0
     # Create a list containing index of every sentence in a Document.
     sentences_index_list = []
@@ -190,6 +202,10 @@ def nlpPipelineHelper(Input, indexQueryFlag=None, doc_id=None,):
         sentence_id += 1
         # Tokenize sentences into words.
         words = tokenizeIntoWords(sentence)
+
+        # Print output for Demo.
+        if QUERY_FLAG:
+            print("Words are {}".format(words))
 
         # Select whether to index words into SOLR or query from SOLR.
         if indexQueryFlag == "index":
@@ -268,6 +284,8 @@ def runAlgorithm(args):
 
     # User input means we need to query from SOLR.
     if args.userInput:
+        global QUERY_FLAG
+        QUERY_FLAG = True
         nlpPipeline("query", userInput=args.userInput)
 
 
