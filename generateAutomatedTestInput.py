@@ -25,6 +25,7 @@ execDir = os.path.dirname(os.path.realpath(__file__))
 
 def printDebugMsg(text):
     """Used for printing debug messages."""
+    global DEBUG
     if DEBUG:
         print(text)
 
@@ -52,7 +53,6 @@ if __name__ == "__main__":
 
     # Set global debug flag.
     if args.debug:
-        global DEBUG
         DEBUG = True
 
     testCounter = 1
