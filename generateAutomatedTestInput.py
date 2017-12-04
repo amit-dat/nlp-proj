@@ -13,6 +13,7 @@
 
 import os
 import argparse
+import datetime
 
 # For Testing Purposes.
 ### DO NOT MAKE CHANGES TO TESTING VARIABLE HERE ###
@@ -42,6 +43,11 @@ separator = "##########"
 
 boolOptions = [True, False]
 
+currPid = os.getpid()
+currTime = datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
+outputFileName = "AutomatedTestInput_{}_{}.txt".format(currPid, currTime)
+outputFilePath = os.path.join(execDir, outputFileName)
+
 
 if __name__ == "__main__":
     # Parse arguments
@@ -57,7 +63,7 @@ if __name__ == "__main__":
 
     testCounter = 1
 
-    with open(os.path.join(execDir, "AutomatedTestInput.txt"), 'w') as outputFile:
+    with open(outputFilePath, 'w') as outputFile:
         for sentenceBool in boolOptions:
             for lemmaBool in boolOptions:
                 for stemBool in boolOptions:
