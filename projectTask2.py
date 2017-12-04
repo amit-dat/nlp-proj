@@ -36,7 +36,6 @@ trainingDataDir = os.path.join(execDir, "TrainingData")
 # Setup a Solr instance. The timeout is optional.
 solr = pysolr.Solr('http://localhost:8983/solr/part2core', timeout=10)
 
-
 def printDebugMsg(text):
     """Used for printing debug messages."""
     if DEBUG:
