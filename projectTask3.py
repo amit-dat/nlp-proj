@@ -390,35 +390,35 @@ def queryFromSOLR(words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, 
     # Build search query.
     searchQuery = ""
 
-    if SENTENCE_FLAG:
+    if SENTENCE_FLAG and len(words) > 0:
         searchQuery += "sentence:({})^{} ".format(" ".join(words), SENTENCE_WEIGHT)
 
-    if LEMMA_FLAG:
+    if LEMMA_FLAG and len(lemmas) > 0:
         searchQuery += "lemmas:({})^{} ".format(" ".join(lemmas), LEMMA_WEIGHT)
 
-    if STEM_FLAG:
+    if STEM_FLAG and len(stems) > 0:
         searchQuery += "stems:({})^{} ".format(" ".join(stems), STEM_WEIGHT)
 
-    if POSTAG_FLAG:
+    if POSTAG_FLAG and len(posTags) > 0:
         posTagList = [str(x) for x in posTags]
         searchQuery += "posTags:({})^{} ".format(" ".join(posTagList), POSTAG_WEIGHT)
 
-    if HEADWORD_FLAG:
+    if HEADWORD_FLAG and len(headWord) > 0:
         searchQuery += "headWord:({})^{} ".format(headWord, HEADWORD_WEIGHT)
 
-    if HYPERNYM_FLAG:
+    if HYPERNYM_FLAG and len(holonyms) > 0:
         hypernymList = [str(x) for x in hypernyms]
         searchQuery += "hypernyms:({})^{} ".format(" ".join(hypernymList), HYPERNYM_WEIGHT)
 
-    if HYPONYM_FLAG:
+    if HYPONYM_FLAG and len(hyponyms) > 0:
         hyponymList = [str(x) for x in hyponyms]
         searchQuery += "hyponyms:({})^{} ".format(" ".join(hyponymList), HYPONYM_WEIGHT)
 
-    if MERONYM_FLAG:
+    if MERONYM_FLAG and len(meronyms) > 0:
         meronymList = [str(x) for x in meronyms]
         searchQuery += "meronyms:({})^{} ".format(" ".join(meronymList), MERONYM_WEIGHT)
 
-    if HOLONYM_FLAG:
+    if HOLONYM_FLAG and len(holonyms) > 0:
         holonymList = [str(x) for x in holonyms]
         searchQuery += "holonyms:({})^{} ".format(" ".join(holonymList), HOLONYM_WEIGHT)
 

@@ -16,6 +16,7 @@ import sys
 import argparse
 import subprocess
 import datetime
+import platform
 
 # For Testing Purposes.
 ### DO NOT MAKE CHANGES TO TESTING VARIABLE HERE ###
@@ -108,8 +109,16 @@ if __name__ == "__main__":
                 # If here then we have all the data.
                 # Initialize list here.  querySentence has to be put together intact into the list.
                 # All other parameters can be put in and split using space later.
-                commandToRunList = ["python", "projectTask3.py",
-                                    "--userInput", querySentence, "--testing"]
+
+                if platform.system() == 'Windows':
+                    # Windows syntax
+                    commandToRunList = ["python", "projectTask3.py",
+                                        "--userInput", querySentence, "--testing"]
+                else:
+                    # Mac/Linux syntax
+                    commandToRunList = ["python3", "projectTask3.py",
+                                        "--userInput", querySentence, "--testing"]
+
                 remainingCommandToRun = ""
                 if sentenceFlag:
                     remainingCommandToRun += "--sentenceFlag --sentenceWeight {} ".format(
