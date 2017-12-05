@@ -111,3 +111,19 @@ The script will output 3 files.  PID and TIMESTAMP are variables and may change 
 3) OutputRunAfterGradingSentences_PID_TIMESTAMP.txt<br />
     a) This one will be used later in determining which variables have higher MRR.<br />
     b) NOT NEEDED RIGHT NOW.<br />
+
+
+
+### Installing Core NLP Server
+<p>1) Install the following:
+http://nlp.stanford.edu/software/stanford-corenlp-full-2017-06-09.zip
+http://nlp.stanford.edu/software/stanford-english-corenlp-2017-06-09-models.jar
+
+2) Go to the directory where you unzipped the file and place the JAR file in there
+
+3) Run the following command in the directory: 
+<pre>java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000</pre>
+
+NOTE: You may have to change mx4g to be mx3g or mx2g or mx1g depending on your computer's resources.
+
+</p>
