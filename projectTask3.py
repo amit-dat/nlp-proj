@@ -41,7 +41,7 @@ trainingDataDir = os.path.join(execDir, "TrainingData")
 solr = pysolr.Solr('http://localhost:8983/solr/part3core', timeout=10)
 
 # Setup a StanfordCoreNLP instance to get the head word.
-nlp = StanfordCoreNLP('http://corenlp.run', port=80)
+nlp = StanfordCoreNLP('http://localhost', port=9000)
 
 # Flags for query variables and their scores.
 # Higher scores put more weight on those search terms.
@@ -182,7 +182,9 @@ def getHeadWord(sentence):
     """
 
     try:
+        printDebugMsg("getHeadWord: About to dependency_parse")
         annotated_text = nlp.dependency_parse(sentence)
+        printDebugMsg("getHeadWord: Finished dependency_parse")
         index = annotated_text[0][2]
         headWord = nlp.word_tokenize(sentence)[index - 1]
         # print("headWord is {}".format(headWord))
@@ -422,10 +424,10 @@ def queryFromSOLR(words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, 
         holonymList = [str(x) for x in holonyms]
         searchQuery += "holonyms:({})^{} ".format(" ".join(holonymList), HOLONYM_WEIGHT)
 
-    # Verify that at least one thing is being queried.
-    if len(searchQuery) == 0:
-        print("ERROR: Nothing specified to search. Exiting...")
-        sys.exit(1)
+    # # Verify that at least one thing is being queried.
+    # if len(searchQuery) == 0:
+    #     print("ERROR: Nothing specified to search. Exiting...")
+    #     sys.exit(1)
 
     printDebugMsg("searchQuery is {}".format(searchQuery))
 
@@ -433,15 +435,19 @@ def queryFromSOLR(words, lemmas, stems, posTags, headWord, hypernyms, hyponyms, 
     if QUERY_FLAG:
         print("SOLR Search Query is:\n{}\n".format(searchQuery))
 
-    # Search.
-    results = solr.search(searchQuery)
+    # Verify that at least one thing is being queried.
+    if len(searchQuery) == 0:
+        print("{}\t{}\t{}\n".format(1, "None", "None"))
+    else:
+        # Search.
+        results = solr.search(searchQuery)
 
-    # Print results.
-    for result in results:
-        print("{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence']))
-        # printDebugMsg("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence'], result[
-        #               'lemmas'], result['stems'], result['posTags'], result['hypernyms'], result['hyponyms'], result['meronyms'], result['holonyms']))
-        resultCounter += 1
+        # Print results.
+        for result in results:
+            print("{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence']))
+            # printDebugMsg("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(resultCounter, result['id'], result['sentence'], result[
+            #               'lemmas'], result['stems'], result['posTags'], result['hypernyms'], result['hyponyms'], result['meronyms'], result['holonyms']))
+            resultCounter += 1
 
 
 def readTrainingData(indexQueryFlag):
