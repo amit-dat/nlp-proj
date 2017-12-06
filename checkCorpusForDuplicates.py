@@ -1,3 +1,15 @@
+# CS 6320 - Natural Language Processing
+# Group Project
+#
+# Check corpus for duplicates.
+#
+# Authors:
+#       Stephen Blystone (smb032100@utdallas.edu)
+#       Amit Gupta (axg162930@utdallas.edu)
+#       Deepan Verma (dxv160430@utdallas.edu)
+#
+# Teamname:
+#       GASBDV (General Anakin Skywalker Becomes Darth Vader)
 import os
 import codecs
 import nltk
